@@ -609,6 +609,8 @@ def render_lesson_workspace() -> None:
                 st.markdown(detailed_plan)
                 
                 # Show YouTube videos if they exist
+                from src.services.course_storage import CourseStorage
+                course_storage = CourseStorage()
                 youtube_videos = course_storage.get_youtube_videos(
                     course_name,
                     lesson["module_idx"],
