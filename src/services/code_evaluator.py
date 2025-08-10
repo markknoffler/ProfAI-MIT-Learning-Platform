@@ -4,15 +4,22 @@ from .ollama_client import call_model
 
 
 def evaluate_code_guidance(objective: str, code: str, language: str = "Python") -> str:
-    """Ask the model to give targeted suggestions and warnings without code."""
+    """Provide focused, real-time guidance based only on the core problem and student's current code."""
     system = (
-        "You are a strict code coach. Evaluate the student's code only against the current learning objective."
-        " Provide short, actionable suggestions, checks, and warnings. Do NOT write code or provide full solutions."
+        "You are a focused coding mentor. Look ONLY at the core problem/concept and the student's current code. "
+        "Provide 1-2 brief, directional hints (no solutions). Focus on: "
+        "1. Is the student on the right track? "
+        "2. What's the next logical step? "
+        "3. Any critical errors to avoid? "
+        "Keep responses under 30 words. Be encouraging but direct."
     )
-    user = (
-        f"Learning objective: {objective}\n\nLanguage: {language}\n\n"
-        f"Student code:\n" + code[:8000]
-    )
+    
+    # Extract only the core concept from the objective
+    core_concept = objective.split('.')[0] if '.' in objective else objective
+    core_concept = core_concept[:100]  # Limit to first 100 chars
+    
+    user = f"Core concept: {core_concept}\nStudent code:\n{code[:2000]}"
+    
     messages = [
         {"role": "system", "content": system},
         {"role": "user", "content": user},
@@ -21,19 +28,22 @@ def evaluate_code_guidance(objective: str, code: str, language: str = "Python") 
 
 
 def evaluate_summary(user_id: str, concept: str, student_summary: str) -> dict:
-    """Evaluate a student's verbal summary of a concept and identify gaps in understanding."""
+    """Evaluate a student's verbal summary with focused analysis."""
+    # Extract only the core concept
+    core_concept = concept.split('.')[0] if '.' in concept else concept
+    core_concept = core_concept[:100]  # Limit to first 100 chars
+    
     system = (
-        "You are an expert educator evaluating a student's understanding of a programming concept. "
-        "Analyze the student's verbal summary and identify any gaps, misconceptions, or missing key points. "
-        "Provide constructive feedback that helps the student improve their understanding."
+        "You are a focused educator evaluating understanding. "
+        "Analyze the student's summary and provide concise, actionable feedback."
     )
     user = (
-        f"Concept: {concept}\n\n"
-        f"Student's verbal summary: {student_summary}\n\n"
-        f"Please evaluate this summary and provide:"
-        f"\n1. A judgement of understanding (excellent, good, fair, needs improvement)"
-        f"\n2. Specific gaps or misconceptions identified"
-        f"\n3. Key points that should have been mentioned"
+        f"Core concept: {core_concept}\n\n"
+        f"Student summary: {student_summary[:500]}\n\n"
+        f"Return JSON with:"
+        f"\n- \"judgement\": \"excellent\", \"good\", \"fair\", \"poor\""
+        f"\n- \"gaps\": [2-3 specific missing concepts]"
+        f"\n- \"notes\": brief learning style observation"
     )
     messages = [
         {"role": "system", "content": system},
@@ -62,8 +72,8 @@ def evaluate_summary(user_id: str, concept: str, student_summary: str) -> dict:
     
     return {
         "judgement": judgement,
-        "gaps": gaps[:5],  # Limit to 5 gaps
-        "full_response": response,
+        "gaps": gaps[:3],  # Limit to 3 gaps
+        "full_response": response[:200],  # Limit response length
         "user_id": user_id,
         "concept": concept,
         "evaluated_at": "2024-01-01T00:00:00Z"  # This would be actual timestamp in production

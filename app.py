@@ -21,7 +21,8 @@ from src.services.ollama_client import quick_answer
 from src.services.course_service import (
     generate_course_structure,
     save_course_to_storage,
-    expand_lesson_plan
+    expand_lesson_plan,
+    evaluate_summary
 )
 from src.services.voice_service import speech_to_text, text_to_speech
 from src.utils.reporting import save_concept_report
@@ -1191,11 +1192,10 @@ def render_course_concept() -> None:
         with c1:
             if st.button("Evaluate Code"):
                 with st.spinner("Evaluating code..."):
-                    guidance = evaluate_concept_code(
-                        user_id=user_id,
-                        concept=concept.get("name", ""),
-                        student_code=st.session_state.get("course_code_content", ""),
-                        topic_hint=st.session_state.get("course_structure", {}).get("course", ""),
+                    guidance = evaluate_code_guidance(
+                        objective=concept.get("name", ""),
+                        code=st.session_state.get("course_code_content", ""),
+                        language=st.session_state.get("code_language", "Python"),
                     )
                 st.session_state["course_last_guidance"] = guidance
                 st.session_state["course_last_eval_at"] = datetime.now(timezone.utc).isoformat()
@@ -1221,10 +1221,9 @@ def render_course_concept() -> None:
         if should_eval and st.session_state.get("course_code_content"):
             with st.spinner("Auto-evaluating your code..."):
                 guidance = evaluate_code_guidance(
-                    user_id=user_id,
-                    concept=concept.get("name", ""),
-                    student_code=st.session_state.get("course_code_content", ""),
-                    topic_hint=st.session_state.get("course_structure", {}).get("course", ""),
+                    objective=concept.get("name", ""),
+                    code=st.session_state.get("course_code_content", ""),
+                    language=st.session_state.get("code_language", "Python"),
                 )
             st.session_state["course_last_guidance"] = guidance
             st.session_state["course_last_eval_at"] = now.isoformat()

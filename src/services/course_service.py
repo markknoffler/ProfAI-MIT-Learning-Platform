@@ -441,55 +441,56 @@ def expand_lesson_plan(course_name: str, module_idx: int, submodule_idx: int, le
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential_jitter(initial=1, max=6))
 def evaluate_concept_code(user_id: str, concept: str, student_code: str, topic_hint: str = "") -> str:
-    """Evaluate student code using AI and provide guidance."""
-    known = query_knowledge(concept or topic_hint, n_results=8)
-    
+    """Provide focused, real-time guidance based only on the core concept and student's current code."""
     try:
-        # Use AI to evaluate the code
-        prompt = f"""You are a strict programming tutor evaluating code for the concept: {concept}
+        # Extract only the core concept
+        core_concept = concept.split('.')[0] if '.' in concept else concept
+        core_concept = core_concept[:100]  # Limit to first 100 chars
+        
+        # Use AI to evaluate the code with minimal context
+        prompt = f"""Core concept: {core_concept}
+Student code:
+{student_code[:2000]}
 
-Student's code:
-{student_code}
+Provide 1-2 brief directional hints (no solutions). Focus on:
+1. Is the student on the right track?
+2. What's the next logical step?
+3. Any critical errors to avoid?
 
-Context about what the student already knows: {known}
-
-Provide specific, actionable guidance that:
-1. Points out what's working well
-2. Identifies specific issues or areas for improvement  
-3. Gives directional hints without revealing the complete solution
-4. Encourages the student to think through the problem
-
-Keep your response under 300 words and focus on the most important feedback."""
+Keep response under 30 words. Be encouraging but direct."""
 
         response = call_model([
-            {"role": "system", "content": "You are a strict programming tutor. Provide directional hints only, no full code solutions."},
+            {"role": "system", "content": "You are a focused coding mentor. Look ONLY at the core problem and student's code. Provide brief, actionable hints."},
             {"role": "user", "content": prompt}
         ])
         
         return response
         
     except Exception as e:
-        return f"Unable to evaluate at the moment due to: {str(e)[:100]}. Keep iterating on your approach; focus on correctness and clarity."
+        return f"Keep iterating on your approach. Focus on the core concept: {concept[:50]}"
 
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential_jitter(initial=1, max=6))
 def evaluate_summary(user_id: str, concept: str, student_summary: str) -> Dict[str, Any]:
-    """Evaluate student's verbal summary using AI and return gap analysis."""
+    """Evaluate student's verbal summary with focused analysis."""
     try:
-        # Use AI to evaluate the summary
-        prompt = f"""You are an evaluator assessing a student's understanding of: {concept}
+        # Extract only the core concept
+        core_concept = concept.split('.')[0] if '.' in concept else concept
+        core_concept = core_concept[:100]  # Limit to first 100 chars
+        
+        # Use AI to evaluate the summary with minimal context
+        prompt = f"""Core concept: {core_concept}
+Student summary: {student_summary[:500]}
 
-Student's summary: {student_summary}
+Return JSON with:
+- "judgement": "excellent", "good", "fair", "poor"
+- "gaps": [2-3 specific missing concepts]
+- "notes": brief learning style observation
 
-Analyze the student's understanding and return a JSON response with these keys:
-- "judgement": "excellent", "good", "fair", "poor", or "unclear"
-- "gaps": [list of specific concepts or areas the student misunderstood or missed]
-- "notes": brief observations about the student's learning style and comprehension
-
-Focus on identifying specific gaps in understanding, not just general feedback."""
+Keep analysis focused and actionable."""
 
         response = call_model([
-            {"role": "system", "content": "You are an evaluator. Return a compact JSON with keys: judgement, gaps, notes."},
+            {"role": "system", "content": "You are a focused evaluator. Return compact JSON with keys: judgement, gaps, notes."},
             {"role": "user", "content": prompt}
         ])
         
@@ -506,11 +507,11 @@ Focus on identifying specific gaps in understanding, not just general feedback."
         return {
             "judgement": "evaluated", 
             "gaps": ["Could not parse AI response"], 
-            "notes": response
+            "notes": response[:100]
         }
         
     except Exception as e:
-        return {"judgement": "error", "gaps": ["AI evaluation failed"], "notes": str(e)[:200]}
+        return {"judgement": "error", "gaps": ["AI evaluation failed"], "notes": str(e)[:100]}
 
 
 def adapt_course_after_subsection(user_id: str, course_state: Dict[str, Any], performance_notes: str) -> Dict[str, Any]:
