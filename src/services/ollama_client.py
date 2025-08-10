@@ -24,7 +24,12 @@ def call_model(messages: List[Dict[str, str]], stream: bool = False) -> str:
             "- Set a clear objective\n- Break down the task\n- Write code in small steps\n- Test iteratively\n- Avoid copying full solutions"
         )
 
-    url = OLLAMA_URL.rstrip("/") + "/api/chat"
+    # Handle case where URL already includes /api/chat
+    base_url = OLLAMA_URL.rstrip("/")
+    if base_url.endswith("/api/chat"):
+        url = base_url
+    else:
+        url = base_url + "/api/chat"
     payload = {
         "model": MODEL_NAME,
         "messages": messages,
