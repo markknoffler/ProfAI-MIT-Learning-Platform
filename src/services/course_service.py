@@ -120,10 +120,19 @@ def _mock_course(topic: str) -> Dict[str, Any]:
         
         sections.append({"name": section_name, "subsections": subsections})
     
-    return {
+    course_data = {
         "course": topic,
         "sections": sections
     }
+    
+    # Save the mock course to storage
+    try:
+        save_course_to_storage(course_data)
+        print(f"✅ Mock course saved to storage for: {topic}")
+    except Exception as e:
+        print(f"❌ Error saving mock course to storage: {str(e)}")
+    
+    return course_data
 
 
 def _test_ai_connection() -> bool:

@@ -43,7 +43,7 @@ def call_model(messages: List[Dict[str, str]], stream: bool = False) -> str:
     print(f"💬 Messages: {len(messages)}")
     
     try:
-        resp = requests.post(url, headers=headers, data=json.dumps(payload), timeout=120)
+        resp = requests.post(url, headers=headers, data=json.dumps(payload), timeout=180)
         print(f"📡 Response status: {resp.status_code}")
         
         if resp.status_code >= 400:

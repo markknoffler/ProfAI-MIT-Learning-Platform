@@ -15,18 +15,20 @@ class YouTubeService:
     def generate_search_prompts(self, lesson_plan: str) -> List[str]:
         """Generate 3 search prompts for YouTube videos based on the lesson plan"""
         try:
-            prompt = f"""Based on this lesson plan, give me 3 search prompts for videos with content similar to this lesson plan.
+            prompt = f"""Based on this programming lesson plan, generate 3 specific YouTube search prompts for educational programming videos.
 
 Lesson Plan:
-{lesson_plan}
+{lesson_plan[:1000]}
 
-Return ONLY a JSON array with exactly 3 search prompts as strings. Example format:
-["search prompt 1", "search prompt 2", "search prompt 3"]
+Return ONLY a JSON array with exactly 3 search prompts as strings. Focus on programming tutorials, coding examples, and educational content.
 
-Make the prompts specific and relevant to the lesson content."""
+Example format:
+["programming tutorial search term", "coding example search term", "educational programming search term"]
+
+Make the prompts specific to programming education and avoid generic terms."""
 
             response = call_model([
-                {"role": "system", "content": "You are a helpful assistant that generates YouTube search prompts. Return ONLY valid JSON arrays."},
+                {"role": "system", "content": "You are a programming education expert. Generate specific YouTube search prompts for programming tutorials and educational content. Return ONLY valid JSON arrays."},
                 {"role": "user", "content": prompt}
             ])
             
@@ -34,7 +36,14 @@ Make the prompts specific and relevant to the lesson content."""
             try:
                 prompts = json.loads(response)
                 if isinstance(prompts, list) and len(prompts) == 3:
-                    return prompts
+                    # Add programming-specific terms to improve search quality
+                    enhanced_prompts = []
+                    for prompt in prompts:
+                        if "programming" not in prompt.lower() and "coding" not in prompt.lower() and "tutorial" not in prompt.lower():
+                            enhanced_prompts.append(f"{prompt} programming tutorial")
+                        else:
+                            enhanced_prompts.append(prompt)
+                    return enhanced_prompts
                 else:
                     print(f"Invalid response format: {response}")
                     return self._generate_fallback_prompts(lesson_plan)
@@ -48,14 +57,25 @@ Make the prompts specific and relevant to the lesson content."""
     
     def _generate_fallback_prompts(self, lesson_plan: str) -> List[str]:
         """Generate fallback search prompts if AI fails"""
-        # Extract key terms from lesson plan
+        # Extract meaningful terms from lesson plan
         words = lesson_plan.lower().split()
-        key_terms = [word for word in words if len(word) > 4 and word.isalpha()][:5]
+        # Filter for meaningful programming-related terms
+        meaningful_terms = []
+        for word in words:
+            if (len(word) > 3 and word.isalpha() and 
+                word not in ['programming', 'coding', 'tutorial', 'lesson', 'learning', 'basic', 'advanced', 'fundamental', 'principles'] and
+                word not in ['the', 'and', 'for', 'with', 'this', 'that', 'what', 'how', 'why', 'when', 'where']):
+                meaningful_terms.append(word)
+        
+        # Take the first 2 meaningful terms, or use defaults
+        key_terms = meaningful_terms[:2]
+        if not key_terms:
+            key_terms = ['python', 'programming']
         
         return [
-            f"{' '.join(key_terms[:2])} tutorial",
-            f"{' '.join(key_terms[2:4])} programming",
-            f"{' '.join(key_terms[:3])} examples"
+            f"{key_terms[0]} programming tutorial",
+            f"{key_terms[0]} coding examples",
+            f"programming {key_terms[0]} basics"
         ]
     
     def search_youtube_videos(self, search_prompts: List[str]) -> List[Dict[str, Any]]:
@@ -100,10 +120,9 @@ Make the prompts specific and relevant to the lesson content."""
         """Get the transcript for a YouTube video"""
         try:
             # Try multiple languages: English, Hindi, and any available
-            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'hi', 'auto'])
-            formatter = TextFormatter()
-            transcript = formatter.format_transcript(transcript_list)
-            return transcript
+            transcript_list = YouTubeTranscriptApi().fetch(video_id, languages=['en', 'hi', 'auto'])
+            transcript_text = " ".join([entry.text for entry in transcript_list])
+            return transcript_text
         except Exception as e:
             print(f"Error getting transcript for video {video_id}: {e}")
             return None
@@ -115,49 +134,58 @@ Make the prompts specific and relevant to the lesson content."""
 
 Video Title: {video_title}
 Transcript:
-{transcript[:3000]}  # Limit transcript length to avoid token limits
+{transcript[:2000]}  # Limit transcript length to avoid token limits
 
-Provide a 2-3 paragraph summary that:
+Provide a clear, educational summary that:
 1. Captures the main concepts and key points
 2. Highlights practical applications or examples
 3. Makes it easy for students to understand the content
 4. Connects to programming/computer science learning
 
-Keep the summary educational and focused on learning value."""
+Keep the summary educational and focused on learning value. Write in clear, professional English."""
 
             response = call_model([
-                {"role": "system", "content": "You are an educational content summarizer. Create clear, concise summaries that help students learn."},
+                {"role": "system", "content": "You are an educational content summarizer. Create clear, concise summaries that help students learn. Write in proper English with clear structure."},
                 {"role": "user", "content": prompt}
             ])
             
-            return response.strip()
+            # Clean up the response if it contains gibberish
+            cleaned_response = response.strip()
+            if len(cleaned_response) < 50 or "You are" in cleaned_response[:100]:
+                return f"This video covers {video_title}. The content provides practical examples and explanations relevant to programming education."
+            
+            return cleaned_response
             
         except Exception as e:
             print(f"Error summarizing video: {e}")
-            return f"Summary unavailable for {video_title}. Error: {str(e)}"
+            return f"This video covers {video_title} and provides educational content relevant to programming concepts."
     
     def generate_video_explanation(self, video_title: str, video_url: str, lesson_context: str) -> str:
         """Generate an AI explanation for why this video is relevant to the lesson"""
         try:
             prompt = f"""Explain why this YouTube video is relevant to the current programming lesson.
 
-Lesson Context: {lesson_context}
+Lesson Context: {lesson_context[:500]}
 Video Title: {video_title}
-Video URL: {video_url}
 
 Provide a brief explanation (2-3 sentences) that:
 1. Connects the video content to the lesson objectives
 2. Explains what value the video adds to the learning experience
 3. Helps students understand why they should watch this video
 
-Keep it concise and educational."""
+Keep it concise and educational. Write in clear, professional English."""
 
             response = call_model([
-                {"role": "system", "content": "You are an educational content curator. Explain why specific videos are relevant to programming lessons."},
+                {"role": "system", "content": "You are an educational content curator. Explain why specific videos are relevant to programming lessons. Write in proper English."},
                 {"role": "user", "content": prompt}
             ])
             
-            return response.strip()
+            # Clean up the response if it contains gibberish
+            cleaned_response = response.strip()
+            if len(cleaned_response) < 30 or "You are" in cleaned_response[:100]:
+                return f"This video provides additional context and practical examples for the lesson content."
+            
+            return cleaned_response
             
         except Exception as e:
             print(f"Error generating video explanation: {e}")

@@ -13,78 +13,45 @@ class LessonExpander:
         # Get relevant knowledge from ChromaDB
         relevant_knowledge = query_knowledge(f"{course_name} {module_name} {submodule_name}", n_results=10)
         
-        # Create the expansion prompt
-        prompt = f"""You are an expert curriculum designer creating a highly detailed lesson plan for a programming course.
+        # Create a more concise expansion prompt to avoid timeouts
+        prompt = f"""Create a detailed lesson plan for a programming course.
 
-COURSE CONTEXT:
-- Course: {course_name}
-- Module: {module_name}
-- Submodule: {submodule_name}
-- Basic Agenda: {lesson_agenda}
+Course: {course_name}
+Module: {module_name}
+Submodule: {submodule_name}
+Agenda: {lesson_agenda}
 
-STUDENT CONTEXT:
-Based on what the student already knows: {relevant_knowledge}
+Create a comprehensive lesson plan with these sections:
 
-TASK:
-Create a comprehensive, detailed lesson plan that breaks down every small detail that should be covered for this lesson. This will be stored as a text file and used by instructors and students.
+1. LEARNING OBJECTIVES
+   - 3-5 specific, measurable objectives
 
-REQUIRED SECTIONS:
+2. LESSON STRUCTURE
+   - Introduction (5-10 min)
+   - Main Content (30-45 min)
+   - Practice Activities (15-20 min)
+   - Assessment (10-15 min)
+   - Summary (5 min)
 
-1. LESSON OVERVIEW
-   - Learning Objectives (3-5 specific, measurable objectives)
-   - Prerequisites (what the student should know before this lesson)
-   - Estimated Duration (total time needed)
-   - Materials Needed (tools, software, resources)
-
-2. LESSON STRUCTURE & TIMELINE
-   - Introduction (5-10 minutes): Hook, overview, and motivation
-   - Main Content (30-45 minutes): Core concepts and explanations
-   - Practice Activities (15-20 minutes): Hands-on exercises
-   - Assessment (10-15 minutes): Check for understanding
-   - Summary & Next Steps (5 minutes): Recap and preview
-
-3. DETAILED CONTENT BREAKDOWN
-   Break down the main concept into 5-8 smaller, digestible parts:
-   - For each part: What to teach, how to teach it, why it's important
-   - Include specific examples and explanations
+3. DETAILED CONTENT
+   - Break down the concept into 3-5 parts
+   - Include examples and explanations
    - Address common misconceptions
 
 4. PRACTICE EXERCISES
-   - 3-5 hands-on exercises with increasing difficulty
+   - 2-3 hands-on exercises
    - Code examples if applicable
-   - Real-world applications
-   - Step-by-step instructions for each exercise
+   - Step-by-step instructions
 
-5. ASSESSMENT & EVALUATION
-   - How to check if students understand each concept
-   - Questions to ask students
+5. ASSESSMENT
+   - Questions to check understanding
    - Common mistakes to watch for
-   - Success criteria for the lesson
 
-6. DIFFERENTIATION & SUPPORT
-   - How to support struggling students
-   - How to challenge advanced students
-   - Additional resources for different learning styles
-
-7. TROUBLESHOOTING
-   - Common issues students might face
-   - How to help them overcome challenges
+6. TROUBLESHOOTING
+   - Common issues and solutions
    - Debugging tips if applicable
 
-8. CONNECTIONS & NEXT STEPS
-   - How this lesson connects to previous material
-   - What concepts this lesson prepares students for
-   - Homework or follow-up activities
-
-FORMAT REQUIREMENTS:
-- Use clear headings for each section
-- Use bullet points and numbered lists for clarity
-- Be specific and actionable
-- Write in a professional but accessible tone
-- This should be comprehensive enough that another instructor could pick up this plan and teach the lesson effectively
-- Focus on practical, actionable content that will help students truly master this concept
-
-Remember: This is for a local AI model with no token limits, so be thorough and detailed. Create a lesson plan that covers every aspect of teaching this concept effectively."""
+Be specific, practical, and actionable. Use clear headings and bullet points."""
 
         try:
             # Call the AI model to expand the lesson plan
@@ -96,7 +63,57 @@ Remember: This is for a local AI model with no token limits, so be thorough and 
             return response.strip()
             
         except Exception as e:
-            return f"Error expanding lesson plan: {str(e)}"
+            print(f"❌ AI lesson expansion failed: {str(e)}")
+            # Return a fallback lesson plan to ensure YouTube processing can still work
+            return self._create_fallback_lesson_plan(course_name, module_name, submodule_name, lesson_agenda)
+    
+    def _create_fallback_lesson_plan(self, course_name: str, module_name: str, submodule_name: str, lesson_agenda: str) -> str:
+        """Create a fallback lesson plan when AI fails"""
+        return f"""# {lesson_agenda}
+
+## LEARNING OBJECTIVES
+- Understand the core concepts of {lesson_agenda}
+- Apply practical knowledge in real-world scenarios
+- Develop problem-solving skills related to {lesson_agenda}
+
+## LESSON STRUCTURE
+- **Introduction (5-10 min)**: Overview and motivation
+- **Main Content (30-45 min)**: Core concepts and explanations
+- **Practice Activities (15-20 min)**: Hands-on exercises
+- **Assessment (10-15 min)**: Check for understanding
+- **Summary (5 min)**: Recap and next steps
+
+## DETAILED CONTENT
+### Core Concepts
+- Fundamental principles of {lesson_agenda}
+- Key terminology and definitions
+- Important concepts to master
+
+### Practical Examples
+- Real-world applications
+- Code examples (if applicable)
+- Step-by-step demonstrations
+
+### Common Misconceptions
+- Typical mistakes to avoid
+- Clarifications on complex topics
+
+## PRACTICE EXERCISES
+1. **Basic Exercise**: Simple application of concepts
+2. **Intermediate Exercise**: More complex problem-solving
+3. **Advanced Exercise**: Real-world scenario application
+
+## ASSESSMENT
+- Understanding check questions
+- Common pitfalls to watch for
+- Success criteria for the lesson
+
+## TROUBLESHOOTING
+- Common issues students face
+- Solutions and workarounds
+- Debugging tips and techniques
+
+This lesson provides a comprehensive introduction to {lesson_agenda} with practical exercises and real-world applications."""
     
     def get_lesson_context(self, course_name: str, module_name: str, submodule_name: str, lesson_name: str) -> Dict[str, Any]:
         """Get the full context for a lesson to help with expansion"""
