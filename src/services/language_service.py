@@ -4,6 +4,7 @@ import requests
 from typing import Dict, Any, List, Optional
 from youtube_transcript_api import YouTubeTranscriptApi
 import re
+from src.services.ollama_client import call_model
 
 class LanguageService:
     def __init__(self, ngrok_endpoint: str = "https://22c7a5135078.ngrok-free.app"):
@@ -54,14 +55,30 @@ class LanguageService:
         """
         
         try:
-            response = requests.post(
-                f"{self.ngrok_endpoint}/api/generate",
-                json={"prompt": prompt},
-                timeout=120
-            )
-            response.raise_for_status()
+            # Use the Ollama client instead of direct HTTP request
+            messages = [
+                {"role": "system", "content": "You are a language curriculum designer. Generate structured JSON responses for language learning curricula."},
+                {"role": "user", "content": prompt}
+            ]
             
-            curriculum = response.json()
+            response_text = call_model(messages)
+            
+            # Try to extract JSON from the response
+            try:
+                # Look for JSON in the response
+                start_idx = response_text.find('{')
+                end_idx = response_text.rfind('}') + 1
+                if start_idx != -1 and end_idx != 0:
+                    json_str = response_text[start_idx:end_idx]
+                    curriculum = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON found in response")
+            except (json.JSONDecodeError, ValueError) as e:
+                # If JSON parsing fails, create a basic curriculum structure
+                print(f"Warning: Could not parse JSON response: {e}")
+                print(f"Response text: {response_text[:500]}...")
+                curriculum = self._create_fallback_curriculum(language, user_details)
+            
             return curriculum
         except Exception as e:
             raise Exception(f"Failed to generate curriculum: {str(e)}")
@@ -95,6 +112,49 @@ class LanguageService:
                         f.write(lesson["lesson_overview"])
         
         return language_dir
+    
+    def _create_fallback_curriculum(self, language: str, user_details: str) -> Dict[str, Any]:
+        """Create a basic fallback curriculum when AI generation fails."""
+        return {
+            "language": language,
+            "modules": [
+                {
+                    "module_number": 1,
+                    "module_title": f"Introduction to {language}",
+                    "submodules": [
+                        {
+                            "submodule_number": 1,
+                            "submodule_title": "Basic Greetings",
+                            "lessons": [
+                                {
+                                    "lesson_number": 1,
+                                    "lesson_title": "Hello and Goodbye",
+                                    "lesson_overview": "Learn basic greetings in " + language
+                                },
+                                {
+                                    "lesson_number": 2,
+                                    "lesson_title": "Introducing Yourself",
+                                    "lesson_overview": "Learn how to introduce yourself in " + language
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    
+    def _create_fallback_lesson(self, language: str, lesson_overview: str) -> Dict[str, Any]:
+        """Create a basic fallback lesson when AI generation fails."""
+        return {
+            "lesson_title": f"Basic {language} Lesson",
+            "learning_objectives": [f"Learn basic {language} concepts", "Practice fundamental skills"],
+            "key_concepts": ["Basic vocabulary", "Simple grammar"],
+            "grammar_points": ["Basic sentence structure", "Common patterns"],
+            "vocabulary": ["Essential words", "Common phrases"],
+            "practice_exercises": ["Vocabulary practice", "Grammar exercises"],
+            "cultural_context": f"Introduction to {language} culture",
+            "detailed_content": lesson_overview
+        }
     
     def expand_lesson_plan(self, language: str, module_num: int, submodule_num: int, 
                           lesson_num: int, learning_history: str = "") -> Dict[str, Any]:
@@ -144,14 +204,29 @@ class LanguageService:
         """
         
         try:
-            response = requests.post(
-                f"{self.ngrok_endpoint}/api/generate",
-                json={"prompt": prompt},
-                timeout=120
-            )
-            response.raise_for_status()
+            # Use the Ollama client instead of direct HTTP request
+            messages = [
+                {"role": "system", "content": "You are a language lesson designer. Generate structured JSON responses for detailed lesson plans."},
+                {"role": "user", "content": prompt}
+            ]
             
-            expanded_lesson = response.json()
+            response_text = call_model(messages)
+            
+            # Try to extract JSON from the response
+            try:
+                # Look for JSON in the response
+                start_idx = response_text.find('{')
+                end_idx = response_text.rfind('}') + 1
+                if start_idx != -1 and end_idx != 0:
+                    json_str = response_text[start_idx:end_idx]
+                    expanded_lesson = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON found in response")
+            except (json.JSONDecodeError, ValueError) as e:
+                # If JSON parsing fails, create a basic lesson structure
+                print(f"Warning: Could not parse JSON response: {e}")
+                print(f"Response text: {response_text[:500]}...")
+                expanded_lesson = self._create_fallback_lesson(language, lesson_overview)
             
             # Save expanded lesson
             expanded_file = os.path.join(lesson_path, "expanded_lesson.json")
@@ -179,14 +254,29 @@ class LanguageService:
         """
         
         try:
-            response = requests.post(
-                f"{self.ngrok_endpoint}/api/generate",
-                json={"prompt": prompt},
-                timeout=60
-            )
-            response.raise_for_status()
+            # Use the Ollama client instead of direct HTTP request
+            messages = [
+                {"role": "system", "content": "You are a YouTube content finder. Generate structured JSON responses for video search prompts."},
+                {"role": "user", "content": prompt}
+            ]
             
-            search_data = response.json()
+            response_text = call_model(messages)
+            
+            # Try to extract JSON from the response
+            try:
+                # Look for JSON in the response
+                start_idx = response_text.find('{')
+                end_idx = response_text.rfind('}') + 1
+                if start_idx != -1 and end_idx != 0:
+                    json_str = response_text[start_idx:end_idx]
+                    search_data = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON found in response")
+            except (json.JSONDecodeError, ValueError) as e:
+                # If JSON parsing fails, create basic search prompts
+                print(f"Warning: Could not parse JSON response: {e}")
+                search_data = {"search_prompts": [f"learn {language} basics", f"{language} tutorial", f"{language} for beginners"]}
+            
             search_prompts = search_data.get("search_prompts", [])
             
             videos = []
@@ -271,14 +361,14 @@ class LanguageService:
         """
         
         try:
-            response = requests.post(
-                f"{self.ngrok_endpoint}/api/generate",
-                json={"prompt": prompt},
-                timeout=60
-            )
-            response.raise_for_status()
+            # Use the Ollama client instead of direct HTTP request
+            messages = [
+                {"role": "system", "content": "You are a video content summarizer. Provide concise summaries of educational content."},
+                {"role": "user", "content": prompt}
+            ]
             
-            return response.json().get("response", "Summary not available")
+            response_text = call_model(messages)
+            return response_text
         except Exception as e:
             return f"Error generating summary: {str(e)}"
     
@@ -305,6 +395,96 @@ class LanguageService:
         
         return None
     
+    def _create_fallback_lesson_content(self, language: str) -> Dict[str, Any]:
+        """Create basic fallback lesson content when AI generation fails."""
+        # Language-specific fallback content
+        if language.lower() == "korean":
+            return {
+                "story": [
+                    {
+                        "sentence": "안녕하세요, 저는 **한국어**를 **배우고** 있습니다.",
+                        "translation": "Hello, I am learning Korean.",
+                        "target_words": ["한국어", "배우고"]
+                    },
+                    {
+                        "sentence": "이것은 **기본적인** 한국어 **수업**입니다.",
+                        "translation": "This is a basic Korean lesson.",
+                        "target_words": ["기본적인", "수업"]
+                    },
+                    {
+                        "sentence": "저는 **학생**이고 한국어를 **공부합니다**.",
+                        "translation": "I am a student and I study Korean.",
+                        "target_words": ["학생", "공부합니다"]
+                    }
+                ],
+                "lesson_focus": {
+                    "grammar_points": ["Basic sentence structure", "Simple present tense"],
+                    "vocabulary": ["한국어", "배우고", "기본적인", "수업", "학생", "공부합니다"],
+                    "cultural_notes": "Introduction to Korean culture and basic greetings"
+                }
+            }
+        elif language.lower() == "japanese":
+            return {
+                "story": [
+                    {
+                        "sentence": "こんにちは、私は**日本語**を**勉強して**います。",
+                        "translation": "Hello, I am studying Japanese.",
+                        "target_words": ["日本語", "勉強して"]
+                    },
+                    {
+                        "sentence": "これは**基本的な**日本語の**授業**です。",
+                        "translation": "This is a basic Japanese lesson.",
+                        "target_words": ["基本的な", "授業"]
+                    }
+                ],
+                "lesson_focus": {
+                    "grammar_points": ["Basic sentence structure", "Simple present tense"],
+                    "vocabulary": ["日本語", "勉強して", "基本的な", "授業"],
+                    "cultural_notes": "Introduction to Japanese culture and basic greetings"
+                }
+            }
+        elif language.lower() == "russian":
+            return {
+                "story": [
+                    {
+                        "sentence": "Привет, я **изучаю** **русский** язык.",
+                        "translation": "Hello, I am studying Russian.",
+                        "target_words": ["изучаю", "русский"]
+                    },
+                    {
+                        "sentence": "Это **базовый** **урок** русского языка.",
+                        "translation": "This is a basic Russian lesson.",
+                        "target_words": ["базовый", "урок"]
+                    }
+                ],
+                "lesson_focus": {
+                    "grammar_points": ["Basic sentence structure", "Simple present tense"],
+                    "vocabulary": ["изучаю", "русский", "базовый", "урок"],
+                    "cultural_notes": "Introduction to Russian culture and basic greetings"
+                }
+            }
+        else:
+            # Generic fallback for other languages
+            return {
+                "story": [
+                    {
+                        "sentence": f"Hello, I am learning {language}.",
+                        "translation": f"Hello, I am learning {language}.",
+                        "target_words": ["hello", "learning"]
+                    },
+                    {
+                        "sentence": f"This is a basic {language} lesson.",
+                        "translation": f"This is a basic {language} lesson.",
+                        "target_words": ["basic", "lesson"]
+                    }
+                ],
+                "lesson_focus": {
+                    "grammar_points": ["Basic sentence structure", "Simple present tense"],
+                    "vocabulary": ["hello", "learning", "basic", "lesson"],
+                    "cultural_notes": f"Introduction to {language} culture and basic greetings"
+                }
+            }
+    
     def generate_lesson_content(self, language: str, module_num: int, submodule_num: int, 
                                lesson_num: int, target_words: List[str] = None) -> Dict[str, Any]:
         """Generate lesson content with story, target words, and translations."""
@@ -324,37 +504,61 @@ class LanguageService:
         
         Lesson Context: {json.dumps(lesson_context, indent=2)}
         
+        IMPORTANT: You MUST generate actual {language} text (using proper script like Hangul for Korean, Hiragana/Katakana for Japanese, Cyrillic for Russian, etc.) NOT English text.
+        
         Create:
-        1. A story (30-40 sentences) that naturally incorporates target vocabulary and grammar
-        2. Target words to focus on (underline these in the story)
-        3. Translation of each sentence
+        1. A story (5-10 sentences) written in actual {language} script that naturally incorporates target vocabulary and grammar
+        2. Target words to focus on (mark these with ** in the story)
+        3. English translation of each sentence
+        
+        For example, if the language is Korean:
+        - "sentence" should be: "안녕하세요, 저는 **한국어**를 **배우고** 있습니다."
+        - "translation" should be: "Hello, I am learning Korean."
+        - "target_words" should be: ["한국어", "배우고"]
         
         Return as JSON:
         {{
             "story": [
                 {{
-                    "sentence": "Original sentence with target words underlined",
+                    "sentence": "Actual {language} text with target words marked with **",
                     "translation": "English translation",
-                    "target_words": ["word1", "word2"]
+                    "target_words": ["actual_word1", "actual_word2"]
                 }}
             ],
             "lesson_focus": {{
                 "grammar_points": ["point1", "point2"],
-                "vocabulary": ["word1", "word2", "word3"],
+                "vocabulary": ["actual_word1", "actual_word2", "actual_word3"],
                 "cultural_notes": "cultural information"
             }}
         }}
+        
+        CRITICAL: The "sentence" field must contain actual {language} text, not English text.
         """
         
         try:
-            response = requests.post(
-                f"{self.ngrok_endpoint}/api/generate",
-                json={"prompt": prompt},
-                timeout=120
-            )
-            response.raise_for_status()
+            # Use the Ollama client instead of direct HTTP request
+            messages = [
+                {"role": "system", "content": f"You are a {language} language content creator. You MUST generate actual {language} text using the proper script (Hangul for Korean, Hiragana/Katakana for Japanese, Cyrillic for Russian, etc.). NEVER return English text in the 'sentence' field - only return the actual {language} text with target words marked using **."},
+                {"role": "user", "content": prompt}
+            ]
             
-            lesson_content = response.json()
+            response_text = call_model(messages)
+            
+            # Try to extract JSON from the response
+            try:
+                # Look for JSON in the response
+                start_idx = response_text.find('{')
+                end_idx = response_text.rfind('}') + 1
+                if start_idx != -1 and end_idx != 0:
+                    json_str = response_text[start_idx:end_idx]
+                    lesson_content = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON found in response")
+            except (json.JSONDecodeError, ValueError) as e:
+                # If JSON parsing fails, create basic lesson content
+                print(f"Warning: Could not parse JSON response: {e}")
+                print(f"Response text: {response_text[:500]}...")
+                lesson_content = self._create_fallback_lesson_content(language)
             
             # Save lesson content
             content_file = os.path.join(lesson_path, "lesson_content.json")

@@ -31,6 +31,7 @@ def init_session_state() -> None:
     defaults = {
         "page": "home",
         "cs_view": "root",
+        "language_view": "root",
         "lesson_plan": None,
         "learning_objective": None,
         "concept_map": None,
@@ -40,7 +41,10 @@ def init_session_state() -> None:
         "last_evaluated_at": None,
         "chat_history": [],
         "uploaded_context": "",
-
+        "selected_language": None,
+        "language_curriculum": None,
+        "current_language_lesson": None,
+        "language_chat_history": [],
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -54,10 +58,14 @@ def set_page(page_name: str) -> None:
 def set_cs_view(view_name: str) -> None:
     st.session_state["cs_view"] = view_name
 
+def set_language_view(view_name: str) -> None:
+    st.session_state["language_view"] = view_name
+
 
 def navigate_home() -> None:
     set_page("home")
     set_cs_view("root")
+    set_language_view("root")
 
 
 def render_home() -> None:
@@ -69,7 +77,8 @@ def render_home() -> None:
         if st.button("Learn Computer Science", use_container_width=True):
             set_page("cs")
     with col2:
-        st.button("Learn Languages (coming soon)", use_container_width=True, disabled=True)
+        if st.button("Learn Languages", use_container_width=True):
+            set_page("language")
     with col3:
         st.button("Learn Physics (coming soon)", use_container_width=True, disabled=True)
 
@@ -1440,6 +1449,320 @@ def render_editor() -> None:
             st.write(st.session_state["last_guidance"])        
 
 
+# Language Learning Functions
+def render_language_root() -> None:
+    render_header("Language Learning")
+    render_subheader("Choose your learning path")
+    
+    # Check if user has existing language courses
+    from src.services.language_service import LanguageService
+    language_service = LanguageService()
+    available_languages = language_service.get_available_languages()
+    
+    if available_languages:
+        st.write("**Your existing language courses:**")
+        for lang in available_languages:
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.write(f"📚 {lang}")
+            with col2:
+                if st.button(f"Continue {lang}", key=f"continue_{lang}"):
+                    st.session_state["selected_language"] = lang
+                    set_language_view("curriculum")
+    
+    st.markdown("---")
+    st.write("**Start a new language course:**")
+    
+    if st.button("Create New Language Course", use_container_width=True, type="primary"):
+        set_language_view("new_course")
+    
+    if st.button("Back to Home", type="secondary"):
+        navigate_home()
+
+
+def render_new_language_course() -> None:
+    render_header("Create New Language Course")
+    
+    language = st.text_input("What language do you want to learn?", 
+                           placeholder="e.g., Korean, Japanese, Russian, Spanish")
+    
+    user_details = st.text_area(
+        "Tell us about your language learning background:",
+        placeholder="Describe your current proficiency level, any previous experience with this language, challenges you've faced, and your learning goals...",
+        height=150
+    )
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Generate Curriculum", type="primary", use_container_width=True):
+            if language and user_details:
+                with st.spinner("Generating personalized curriculum..."):
+                    try:
+                        from src.services.language_service import LanguageService
+                        language_service = LanguageService()
+                        
+                        # Generate curriculum
+                        curriculum = language_service.generate_language_curriculum(language, user_details)
+                        
+                        # Create directory structure
+                        language_dir = language_service.create_curriculum_structure(curriculum)
+                        
+                        st.session_state["selected_language"] = language
+                        st.session_state["language_curriculum"] = curriculum
+                        
+                        st.success(f"Curriculum created successfully! Created {len(curriculum['modules'])} modules.")
+                        set_language_view("curriculum")
+                        
+                    except Exception as e:
+                        st.error(f"Error generating curriculum: {str(e)}")
+            else:
+                st.error("Please provide both language and background details.")
+    
+    with col2:
+        if st.button("Back to Language Options", type="secondary", use_container_width=True):
+            set_language_view("root")
+
+
+def render_language_curriculum() -> None:
+    render_header(f"Language Curriculum: {st.session_state['selected_language']}")
+    
+    curriculum = st.session_state.get("language_curriculum")
+    if not curriculum:
+        # Load from existing directory
+        from src.services.language_service import LanguageService
+        language_service = LanguageService()
+        curriculum = language_service.get_language_curriculum(st.session_state["selected_language"])
+        if curriculum:
+            st.session_state["language_curriculum"] = curriculum
+    
+    if curriculum:
+        st.write(f"**Curriculum Overview:** {len(curriculum['modules'])} modules")
+        
+        for i, module in enumerate(curriculum['modules']):
+            st.markdown(f"### Module {module['module_number']}: {module['module_title']}")
+            st.write(f"**{len(module['submodules'])} submodules**")
+            
+            for j, submodule in enumerate(module['submodules']):
+                st.markdown(f"#### Submodule {submodule['submodule_number']}: {submodule['submodule_title']}")
+                st.write(f"**{len(submodule['lessons'])} lessons**")
+                
+                for k, lesson in enumerate(submodule['lessons']):
+                    st.markdown("---")
+                    col1, col2, col3 = st.columns([3, 1, 1])
+                    with col1:
+                        st.write(f"**Lesson {lesson['lesson_number']}:** {lesson['lesson_title']}")
+                        st.write(lesson['lesson_overview'])
+                    
+                    with col2:
+                        if st.button("Expand", key=f"expand_{i}_{j}_{k}"):
+                            with st.spinner("Expanding lesson..."):
+                                try:
+                                    from src.services.language_service import LanguageService
+                                    language_service = LanguageService()
+                                    
+                                    # Get learning history from simple store
+                                    from src.services.simple_language_store import SimpleLanguageStore
+                                    chroma_store = SimpleLanguageStore()
+                                    learning_history = chroma_store.get_learning_history(
+                                        st.session_state["selected_language"]
+                                    )
+                                    
+                                    # Convert learning history to string
+                                    history_text = ""
+                                    if learning_history:
+                                        history_parts = []
+                                        for hist in learning_history[:5]:  # Limit to recent 5
+                                            content = hist.get('content', '')
+                                            metadata = hist.get('metadata', {})
+                                            concept = metadata.get('concept', 'Unknown')
+                                            history_parts.append(f"{concept}: {content[:100]}...")
+                                        history_text = "; ".join(history_parts)
+                                    
+                                    # Expand lesson
+                                    expanded_lesson = language_service.expand_lesson_plan(
+                                        st.session_state["selected_language"],
+                                        module['module_number'],
+                                        submodule['submodule_number'],
+                                        lesson['lesson_number'],
+                                        history_text
+                                    )
+                                    
+                                    st.success("Lesson expanded successfully!")
+                                    
+                                except Exception as e:
+                                    st.error(f"Error expanding lesson: {str(e)}")
+                    
+                    with col3:
+                        if st.button("Start Lesson", key=f"start_{i}_{j}_{k}"):
+                            st.session_state["current_language_lesson"] = {
+                                "language": st.session_state["selected_language"],
+                                "module": module['module_number'],
+                                "submodule": submodule['submodule_number'],
+                                "lesson": lesson['lesson_number'],
+                                "lesson_title": lesson['lesson_title']
+                            }
+                            set_language_view("lesson_workspace")
+    else:
+        st.error("No curriculum found. Please create a new course.")
+        if st.button("Back to Language Options"):
+            set_language_view("root")
+    
+    if st.button("Back to Language Options", type="secondary"):
+        set_language_view("root")
+
+
+def render_language_lesson_workspace() -> None:
+    lesson_info = st.session_state.get("current_language_lesson")
+    if not lesson_info:
+        st.error("No lesson selected")
+        set_language_view("curriculum")
+        return
+    
+    render_header(f"Lesson: {lesson_info['lesson_title']}")
+    render_subheader(f"{lesson_info['language']} - Module {lesson_info['module']}, Submodule {lesson_info['submodule']}")
+    
+    # Generate lesson content
+    from src.services.language_service import LanguageService
+    language_service = LanguageService()
+    
+    try:
+        lesson_content = language_service.generate_lesson_content(
+            lesson_info['language'],
+            lesson_info['module'],
+            lesson_info['submodule'],
+            lesson_info['lesson']
+        )
+        
+        # Three-column layout
+        left_col, center_col, right_col = st.columns(3)
+        
+        with left_col:
+            st.markdown("### Lesson Overview")
+            # Try to get lesson overview from expanded lesson
+            lesson_path = language_service._get_lesson_path(
+                lesson_info['language'],
+                lesson_info['module'],
+                lesson_info['submodule'],
+                lesson_info['lesson']
+            )
+            if lesson_path:
+                overview_file = os.path.join(lesson_path, "lesson_overview.txt")
+                if os.path.exists(overview_file):
+                    with open(overview_file, 'r', encoding='utf-8') as f:
+                        overview = f.read()
+                    st.write(overview)
+                else:
+                    st.write("No overview available")
+            else:
+                st.write("No overview available")
+            
+            # Assistant chat box
+            st.markdown("### Learning Assistant")
+            user_question = st.text_input("Ask a question about this lesson:", key="language_question")
+            
+            if st.button("Ask", key="ask_language_question"):
+                if user_question:
+                    # Store query in simple store
+                    from src.services.simple_language_store import SimpleLanguageStore
+                    chroma_store = SimpleLanguageStore()
+                    chroma_store.store_user_query(
+                        lesson_info['language'],
+                        user_question,
+                        lesson_content.get('lesson_overview', ''),
+                        lesson_info['module'],
+                        lesson_info['submodule'],
+                        lesson_info['lesson']
+                    )
+                    
+                    # Get AI response using RAG
+                    rag_prompt = chroma_store.create_rag_prompt(
+                        lesson_info['language'],
+                        user_question,
+                        lesson_info['module'],
+                        lesson_info['submodule'],
+                        lesson_info['lesson']
+                    )
+                    
+                    from src.services.ollama_client import quick_answer
+                    response = quick_answer(rag_prompt)
+                    
+                    st.session_state["language_chat_history"].append({
+                        "question": user_question,
+                        "answer": response,
+                        "timestamp": datetime.now().isoformat()
+                    })
+            
+            # Display chat history
+            if st.session_state.get("language_chat_history"):
+                st.markdown("**Recent Questions:**")
+                for chat in st.session_state["language_chat_history"][-5:]:
+                    st.write(f"**Q:** {chat['question']}")
+                    st.write(f"**A:** {chat['answer']}")
+                    st.markdown("---")
+        
+        with center_col:
+            st.markdown("### Story with Target Words")
+            if lesson_content.get('story'):
+                for i, story_item in enumerate(lesson_content['story']):
+                    sentence = story_item.get('sentence', '')
+                    # Highlight target words (assuming they're marked with **)
+                    highlighted_sentence = sentence.replace('**', '<u>').replace('**', '</u>')
+                    st.markdown(f"**{i+1}.** {highlighted_sentence}", unsafe_allow_html=True)
+                    st.markdown("---")
+            else:
+                st.write("Story content not available")
+        
+        with right_col:
+            st.markdown("### Translations")
+            if lesson_content.get('story'):
+                for i, story_item in enumerate(lesson_content['story']):
+                    original = story_item.get('sentence', '').replace('**', '')  # Remove markdown
+                    translation = story_item.get('translation', '')
+                    st.write(f"**{i+1}.** {original}")
+                    st.write(f"*{translation}*")
+                    st.markdown("---")
+            else:
+                st.write("Translation content not available")
+        
+        # Bottom controls
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("Mark as Completed"):
+                # Store learning progress
+                from src.services.simple_language_store import SimpleLanguageStore
+                chroma_store = SimpleLanguageStore()
+                chroma_store.store_learning_history(
+                    lesson_info['language'],
+                    lesson_info['lesson_title'],
+                    "completed",
+                    "Lesson completed successfully",
+                    lesson_content.get('lesson_overview', '')
+                )
+                st.success("Progress saved!")
+        
+        with col2:
+            if st.button("Report Difficulty"):
+                difficulty = st.text_area("What was challenging about this lesson?")
+                if st.button("Submit Difficulty Report"):
+                    from src.services.simple_language_store import SimpleLanguageStore
+                    chroma_store = SimpleLanguageStore()
+                    chroma_store.store_difficulty(
+                        lesson_info['language'],
+                        lesson_info['lesson_title'],
+                        difficulty
+                    )
+                    st.success("Difficulty reported!")
+        
+        with col3:
+            if st.button("Back to Curriculum", type="secondary"):
+                set_language_view("curriculum")
+    
+    except Exception as e:
+        st.error(f"Error loading lesson content: {str(e)}")
+        if st.button("Back to Curriculum"):
+            set_language_view("curriculum")
+
+
 def main() -> None:
     st.set_page_config(page_title="Learning Assistant", layout="wide")
     init_session_state()
@@ -1474,6 +1797,17 @@ def main() -> None:
             render_lesson_workspace()
         else:
             render_cs_root()
+    elif st.session_state["page"] == "language":
+        if st.session_state["language_view"] == "root":
+            render_language_root()
+        elif st.session_state["language_view"] == "new_course":
+            render_new_language_course()
+        elif st.session_state["language_view"] == "curriculum":
+            render_language_curriculum()
+        elif st.session_state["language_view"] == "lesson_workspace":
+            render_language_lesson_workspace()
+        else:
+            render_language_root()
     else:
         render_home()
 

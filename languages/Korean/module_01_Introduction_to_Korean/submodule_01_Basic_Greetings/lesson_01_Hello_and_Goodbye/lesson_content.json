@@ -1,0 +1,60 @@
+{
+  "story": [
+    {
+      "sentence": "안녕하세요, **저는** 한국어를 배우고 있습니다.",
+      "translation": "Hello, I am learning Korean.",
+      "target_words": [
+        "안녕하세요",
+        "저는"
+      ]
+    },
+    {
+      "sentence": "**친구들과 만나자**, **그리고 안녕히 계세요**.",
+      "translation": "Meet my friends and say goodbye to them.",
+      "target_words": [
+        "친구들",
+        "만나자",
+        "안녕히 계세요"
+      ]
+    },
+    {
+      "sentence": "**어제 저는 학교에서 새로운 친구를 사귀었습니다. **",
+      "translation": "Yesterday, I made a new friend at school.",
+      "target_words": [
+        "어제",
+        "새로운",
+        "친구"
+      ]
+    },
+    {
+      "sentence": "**그 친구는 매우 재미있었고, 함께 **한국어를 연습하기도 합니다. **",
+      "translation": "That friend was very fun and we also practice Korean together.",
+      "target_words": [
+        "매우",
+        "재미있고",
+        "함께"
+      ]
+    },
+    {
+      "sentence": "**그 친구는 내가 **한국어를 배우는 동안 도와주었습니다. **",
+      "translation": "That friend helped me while I was learning Korean.",
+      "target_words": [
+        "그 친구",
+        "내가",
+        "한국어"
+      ]
+    }
+  ],
+  "lesson_focus": {
+    "grammar_points": [
+      "안녕하세요 - Hello (formal)",
+      "안녕히 계세요 - Goodbye (formal)"
+    ],
+    "vocabulary": [
+      "친구들 - friends",
+      "만나자 - meet",
+      "어제 - yesterday"
+    ],
+    "cultural_notes": "In Korea, greetings are an essential part of the culture. It is important to use appropriate levels of formality when speaking."
+  }
+}
