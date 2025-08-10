@@ -19,7 +19,7 @@ youtube_service = None
 
 
 #API_BASE = os.getenv("NGROK_OLLAMA_URL", "").rstrip("/")
-API_BASE="https://22c7a5135078.ngrok-free.app"
+API_BASE = "NGROK_OLLAMA_URL"
 
 
 def _is_configured() -> bool:
