@@ -46,14 +46,24 @@ An intelligent, AI-driven learning platform that creates personalized educationa
    pip install -r requirements.txt
    ```
 
-3. **Set up environment variables** (optional):
+3. **Set up environment variables**:
    ```bash
-   # Create .env file with your API keys
-   YOUTUBE_API_KEY=your_youtube_api_key
-   NGROK_OLLAMA_URL=your_ngrok_endpoint
+   # Copy the example environment file
+   cp env.example .env
+   
+   # Edit .env file with your actual API keys
+   # You'll need:
+   # - ElevenLabs API key for voice features
+   # - YouTube Data API key for video integration
+   # - ngrok endpoint for Ollama server
    ```
 
-4. **Run the application**:
+4. **Run the setup script** (optional):
+   ```bash
+   python setup.py
+   ```
+
+5. **Run the application**:
    ```bash
    streamlit run app.py
    ```

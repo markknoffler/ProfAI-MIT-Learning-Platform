@@ -9,7 +9,7 @@ from .ollama_client import call_model
 
 class YouTubeService:
     def __init__(self):
-        self.api_key = "AIzaSyAdORMhAnuRhdvqi87os4YvmWjss6ENwuM"
+        self.api_key = os.getenv("YOUTUBE_API_KEY", "")
         self.youtube = build('youtube', 'v3', developerKey=self.api_key)
     
     def generate_search_prompts(self, lesson_plan: str) -> List[str]:

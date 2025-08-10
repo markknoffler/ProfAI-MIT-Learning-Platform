@@ -93,14 +93,14 @@ languages_data/
 ## API Integration
 
 ### Ollama Integration
-- **Endpoint**: `https://22c7a5135078.ngrok-free.app`
+- **Endpoint**: `YOUR_NGROK_ENDPOINT`
 - **Curriculum Generation**: Creates structured learning plans
 - **Lesson Expansion**: Generates detailed lesson content
 - **Content Creation**: Produces stories and translations
 - **Video Analysis**: Summarizes video transcripts
 
 ### YouTube Integration
-- **API Key**: `AIzaSyAdORMhAnuRhdvqi87os4YvmWjss6ENwuM`
+- **API Key**: `YOUR_YOUTUBE_API_KEY`
 - **Search**: Finds relevant educational videos
 - **Transcript Download**: Uses `youtube-transcript-api`
 - **Content Filtering**: Applies "medium" duration filter

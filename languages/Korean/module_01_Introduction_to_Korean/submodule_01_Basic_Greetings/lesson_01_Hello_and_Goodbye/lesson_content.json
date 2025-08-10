@@ -1,47 +1,46 @@
 {
   "story": [
     {
-      "sentence": "안녕하세요, **저는** 한국어를 배우고 있습니다.",
+      "sentence": "안녕하세요, **저는** **한국어**를 **배우고** 있습니다.",
       "translation": "Hello, I am learning Korean.",
       "target_words": [
         "안녕하세요",
-        "저는"
+        "저는",
+        "한국어",
+        "배우고"
       ]
     },
     {
-      "sentence": "**친구들과 만나자**, **그리고 안녕히 계세요**.",
-      "translation": "Meet my friends and say goodbye to them.",
+      "sentence": "**오늘은** **좋은 날이다**.",
+      "translation": "Today is a good day.",
       "target_words": [
-        "친구들",
-        "만나자",
-        "안녕히 계세요"
+        "오늘은",
+        "좋은 날이다"
       ]
     },
     {
-      "sentence": "**어제 저는 학교에서 새로운 친구를 사귀었습니다. **",
-      "translation": "Yesterday, I made a new friend at school.",
+      "sentence": "**안녕히 계세요**, **친구여**.",
+      "translation": "Goodbye, friend.",
       "target_words": [
-        "어제",
-        "새로운",
+        "안녕히 계세요",
         "친구"
       ]
     },
     {
-      "sentence": "**그 친구는 매우 재미있었고, 함께 **한국어를 연습하기도 합니다. **",
-      "translation": "That friend was very fun and we also practice Korean together.",
+      "sentence": "**어서오세요**, **선생님**.",
+      "translation": "Welcome, teacher.",
       "target_words": [
-        "매우",
-        "재미있고",
-        "함께"
+        "어서오세요",
+        "선생님"
       ]
     },
     {
-      "sentence": "**그 친구는 내가 **한국어를 배우는 동안 도와주었습니다. **",
-      "translation": "That friend helped me while I was learning Korean.",
+      "sentence": "**감사합니다**. **이 책은** **정말 유익하다**.",
+      "translation": "Thank you. This book is very helpful.",
       "target_words": [
-        "그 친구",
-        "내가",
-        "한국어"
+        "감사합니다",
+        "이 책",
+        "정말 유익하다"
       ]
     }
   ],
@@ -51,10 +50,16 @@
       "안녕히 계세요 - Goodbye (formal)"
     ],
     "vocabulary": [
-      "친구들 - friends",
-      "만나자 - meet",
-      "어제 - yesterday"
+      "안녕하세요",
+      "오늘은",
+      "좋은 날이다",
+      "안녕히 계세요",
+      "어서오세요",
+      "선생님",
+      "감사합니다",
+      "이 책",
+      "정말 유익하다"
     ],
-    "cultural_notes": "In Korea, greetings are an essential part of the culture. It is important to use appropriate levels of formality when speaking."
+    "cultural_notes": "In Korea, it is important to use appropriate levels of formality when speaking. Greetings are an essential part of Korean culture."
   }
 }

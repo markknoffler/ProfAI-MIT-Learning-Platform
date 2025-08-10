@@ -7,9 +7,9 @@ import re
 from src.services.ollama_client import call_model
 
 class LanguageService:
-    def __init__(self, ngrok_endpoint: str = "https://22c7a5135078.ngrok-free.app"):
-        self.ngrok_endpoint = ngrok_endpoint
-        self.youtube_api_key = "AIzaSyAdORMhAnuRhdvqi87os4YvmWjss6ENwuM"
+    def __init__(self, ngrok_endpoint: str = None):
+        self.ngrok_endpoint = ngrok_endpoint or os.getenv("NGROK_OLLAMA_URL", "")
+        self.youtube_api_key = os.getenv("YOUTUBE_API_KEY", "")
         self.languages_dir = "languages"
         
         # Create languages directory if it doesn't exist

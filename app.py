@@ -70,17 +70,76 @@ def navigate_home() -> None:
 
 
 def render_home() -> None:
-    render_header("Learning Assistant with Integrated Code Editor")
+    render_header("ProfAI")
     st.write("Choose a domain to get started. Only Computer Science is functional right now.")
+
+    # Add custom CSS for better button styling
+    st.markdown("""
+        <style>
+        .main-menu-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px 0;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .main-menu-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.2);
+        }
+        .language-button {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .physics-button {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            opacity: 0.6;
+        }
+        .button-container {
+            padding: 10px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        if st.button("Learn Computer Science", use_container_width=True):
+        st.markdown("""
+            <div class="button-container">
+                <div class="main-menu-button" onclick="document.querySelector('#cs-button').click()">
+                    💻 Learn Computer Science
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button("Learn Computer Science", key="cs-button", use_container_width=True, type="primary"):
             set_page("cs")
     with col2:
-        if st.button("Learn Languages", use_container_width=True):
+        st.markdown("""
+            <div class="button-container">
+                <div class="main-menu-button language-button" onclick="document.querySelector('#lang-button').click()">
+                    🌍 Learn Languages
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button("Learn Languages", key="lang-button", use_container_width=True, type="primary"):
             set_page("language")
     with col3:
+        st.markdown("""
+            <div class="button-container">
+                <div class="main-menu-button physics-button">
+                    ⚡ Learn Physics (coming soon)
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
         st.button("Learn Physics (coming soon)", use_container_width=True, disabled=True)
 
 
@@ -88,12 +147,66 @@ def render_cs_root() -> None:
     render_header("Computer Science")
     render_subheader("How would you like to learn?")
 
+    # Add custom CSS for CS submenu buttons
+    st.markdown("""
+        <style>
+        .cs-submenu-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 25px 20px;
+            margin: 15px 0;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .cs-submenu-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+        }
+        .concept-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .course-button {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .cs-button-container {
+            padding: 8px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Learn a New Concept", use_container_width=True):
+        st.markdown("""
+            <div class="cs-button-container">
+                <div class="cs-submenu-button concept-button" onclick="document.querySelector('#concept-button').click()">
+                    🧠 Learn a New Concept<br>
+                    <small>Master individual topics</small>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button("Learn a New Concept", key="concept-button", use_container_width=True, type="primary"):
             set_cs_view("new_concept")
     with col2:
-        if st.button("Take a Course", use_container_width=True):
+        st.markdown("""
+            <div class="cs-button-container">
+                <div class="cs-submenu-button course-button" onclick="document.querySelector('#course-button').click()">
+                    📚 Take a Course<br>
+                    <small>Structured learning path</small>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button("Take a Course", key="course-button", use_container_width=True, type="primary"):
             set_cs_view("course_prompt")
 
     if st.button("Back to Home", type="secondary"):
@@ -1763,7 +1876,7 @@ def render_language_lesson_workspace() -> None:
 
 
 def main() -> None:
-    st.set_page_config(page_title="Learning Assistant", layout="wide")
+    st.set_page_config(page_title="ProfAI", layout="wide")
     init_session_state()
 
     # Light custom CSS for aesthetics

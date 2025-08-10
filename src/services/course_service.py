@@ -14,7 +14,8 @@ from .youtube_service import YouTubeService
 # Initialize storage and expander
 course_storage = CourseStorage()
 lesson_expander = LessonExpander()
-youtube_service = YouTubeService()
+# Initialize YouTube service lazily to avoid import errors
+youtube_service = None
 
 
 #API_BASE = os.getenv("NGROK_OLLAMA_URL", "").rstrip("/")

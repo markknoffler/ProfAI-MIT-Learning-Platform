@@ -6,8 +6,7 @@ import requests
 from tenacity import retry, stop_after_attempt, wait_exponential_jitter
 
 
-#OLLAMA_URL = os.getenv("NGROK_OLLAMA_URL", "")  # e.g., https://abcd-xyz.ngrok.io
-OLLAMA_URL = "https://22c7a5135078.ngrok-free.app"
+OLLAMA_URL = os.getenv("NGROK_OLLAMA_URL", "")  # e.g., https://abcd-xyz.ngrok.io
 MODEL_NAME = os.getenv("OLLAMA_MODEL", "phi3:14b")
 
 

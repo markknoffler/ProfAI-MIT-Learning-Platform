@@ -5,8 +5,7 @@ from typing import Tuple
 import requests
 
 
-#ELEVEN_API_KEY = os.getenv("ELEVEN_API_KEY", "")
-ELEVEN_API_KEY="sk_f571901455d46005665d247325489a144f5176f012dc851a"
+ELEVEN_API_KEY = os.getenv("ELEVEN_API_KEY", "")
 ELEVEN_TTS_VOICE_ID = os.getenv("ELEVEN_TTS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
 
 
