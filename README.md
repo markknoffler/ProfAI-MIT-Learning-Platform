@@ -166,6 +166,17 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - ✅ Seamless UI integration with lesson content
 - ✅ Relevance explanations for each video
 - ✅ Local storage of video metadata and transcripts
+  
+
+![ProfAI screenshot](resources_imgs/ProfAI_3.png)
+
+
+![ProfAI screenshot](resources_imgs/ProfAI_1.png)
+
+
+![ProfAI screenshot](resources_imgs/ProfAI_4.png)
+
+
 
 ---
 
