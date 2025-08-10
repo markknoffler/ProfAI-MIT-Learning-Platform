@@ -1,5 +1,7 @@
 # ProfAI MIT - AI-Powered Learning Platform
 
+https://github.com/markknoffler/ProfAI-MIT-Learning-Platform/blob/main/resources_imgs/ProfAI_1.png
+
 An intelligent, AI-driven learning platform that creates personalized educational experiences with integrated YouTube video content and ChromaDB knowledge retrieval.
 
 ## 🚀 Features
